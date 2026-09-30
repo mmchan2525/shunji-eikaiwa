@@ -575,10 +575,10 @@
     .book-spread-grid.masked .right-card .english-sentence,
     .book-spread-grid.masked .right-card .pronunciation-tag,
     .book-spread-grid.masked .right-card .explanation-callout {
-      filter: blur(6px);
+      filter: blur(7px);
       user-select: none;
       cursor: pointer;
-      transition: filter 0.2s;
+      transition: filter 0.2s ease;
     }
     .book-spread-grid.masked .right-card.revealed .english-sentence,
     .book-spread-grid.masked .right-card.revealed .pronunciation-tag,
@@ -588,15 +588,36 @@
     .book-spread-grid.masked .right-card {
       cursor: pointer;
       position: relative;
+      transition: background-color 0.2s ease;
+    }
+    .book-spread-grid.masked .left-card {
+      cursor: pointer;
+    }
+    .book-spread-grid.masked .right-card:not(.revealed) {
+      background: rgba(24, 100, 171, 0.05);
+      border: 1px dashed rgba(24, 100, 171, 0.35);
     }
     .book-spread-grid.masked .right-card:not(.revealed)::after {
-      content: "👆 タップして英文を表示";
-      display: block;
-      font-size: 0.72rem;
-      color: var(--accent-blue);
+      content: "👁️ タップして英文を表示";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 12px;
+      margin-top: 6px;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-radius: 4px;
+      font-size: 0.76rem;
       font-weight: 700;
-      margin-top: 4px;
       letter-spacing: 0.02em;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .book-spread-grid.masked .right-card.revealed::after {
+      content: "🙈 タップで再非表示";
+      display: inline-block;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
     /* Row 11: Footer (Page Numbers) */
@@ -680,6 +701,57 @@
     }
     .btn-nav-action:hover:not(:disabled) { background: #344061; }
     .btn-nav-action:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-nav-mask {
+      background: #252e44;
+      color: #f1f5f9;
+      border: 1px solid #4a5880;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    .btn-nav-mask:hover {
+      background: #364264;
+      border-color: #6577aa;
+    }
+    .btn-nav-mask:active {
+      transform: scale(0.96);
+    }
+    .btn-nav-mask.active {
+      background: #c92a2a;
+      border-color: #ff8787;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(201, 42, 42, 0.6);
+    }
+    [data-theme="white"] .btn-nav-mask {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+    [data-theme="white"] .btn-nav-mask.active {
+      background: #c92a2a;
+      color: #ffffff;
+      border-color: #ff8787;
+    }
+    [data-theme="dark"] .btn-nav-mask {
+      background: #1c263b;
+      color: #f8fafc;
+      border-color: #3b4e75;
+    }
+    [data-theme="dark"] .btn-nav-mask.active {
+      background: #e03131;
+      color: #ffffff;
+      border-color: #ff6b6b;
+    }
 
     .page-indicator-badge {
       font-size: 0.92rem;
@@ -863,16 +935,44 @@
         position: sticky;
         bottom: 0;
         height: auto;
-        min-height: 48px;
-        padding: 6px 12px max(8px, env(safe-area-inset-bottom));
+        min-height: 52px;
+        padding: 6px 10px max(10px, env(safe-area-inset-bottom));
         gap: 6px;
+        justify-content: space-between;
       }
       .btn-nav-action {
-        padding: 7px 12px;
+        padding: 8px 12px;
         font-size: 0.82rem;
+        flex-shrink: 0;
+      }
+      .btn-nav-mask {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        border-radius: 20px;
+        flex-shrink: 0;
+        font-weight: 800;
+        background: #2b354f;
+      }
+      .btn-nav-mask.active {
+        background: #c92a2a;
+        box-shadow: 0 0 10px rgba(201, 42, 42, 0.6);
       }
       .page-indicator-badge {
-        font-size: 0.8rem;
+        font-size: 0.78rem;
+        padding: 2px 6px;
+        white-space: nowrap;
+      }
+      @media (max-width: 410px) {
+        .nav-label-text {
+          display: none;
+        }
+        .btn-nav-action {
+          padding: 8px 10px;
+        }
+        .btn-nav-mask {
+          padding: 8px 12px;
+          font-size: 0.82rem;
+        }
       }
     }
   </style>
@@ -895,6 +995,18 @@
         <!-- populated by JS -->
       </select>
 
+      <!-- Mask Mode (Study / Blur answers) - Prioritized first for easy mobile access -->
+      <button class="btn-tool" id="maskToggleBtn" onclick="toggleMaskMode()" title="英語を伏せて自力で言えるかテストします">
+        <span>🙈</span>
+        <span id="maskBtnText">暗記テスト</span>
+      </button>
+
+      <!-- Auto Play Speech -->
+      <button class="btn-tool" id="playAllBtn" onclick="playAllPhrases()" title="UNIT内の全フレーズを順番に読み上げます">
+        <span>🔊</span>
+        <span>連続再生</span>
+      </button>
+
       <!-- Search Input -->
       <div class="search-bar-wrap">
         <span class="search-icon">🔍</span>
@@ -911,18 +1023,6 @@
       <button class="btn-tool" id="viewModeBtn" onclick="toggleViewMode()" title="組版テキストと原本スキャン画像を切り替えます">
         <span id="viewModeIcon">🖼️</span>
         <span id="viewModeText">原本スキャン</span>
-      </button>
-
-      <!-- Mask Mode (Study / Blur answers) -->
-      <button class="btn-tool" id="maskToggleBtn" onclick="toggleMaskMode()" title="英語を伏せて自力で言えるかテストします">
-        <span>🙈</span>
-        <span id="maskBtnText">暗記テスト</span>
-      </button>
-
-      <!-- Auto Play Speech -->
-      <button class="btn-tool" id="playAllBtn" onclick="playAllPhrases()" title="UNIT内の全9フレーズを順番に読み上げます">
-        <span>🔊</span>
-        <span>連続再生</span>
       </button>
 
       <!-- Theme Switcher -->
@@ -946,17 +1046,25 @@
     </div>
   </main>
 
-  <!-- Bottom Navigation Controls -->
+  <!-- Bottom Navigation Controls (Thumb Friendly) -->
   <footer class="bottom-nav">
     <button class="btn-nav-action" id="prevBtn" onclick="prevUnit()">
       <span>◀</span>
-      <span>前のUNIT</span>
+      <span class="nav-label-text">前のUNIT</span>
     </button>
+
+    <!-- Prominent Bottom Mask Toggle Button -->
+    <button class="btn-nav-mask" id="bottomMaskBtn" onclick="toggleMaskMode()" title="暗記テスト切替 (英語を隠す/表示)">
+      <span id="bottomMaskIcon">🙈</span>
+      <span id="bottomMaskText">暗記テスト</span>
+    </button>
+
     <div class="page-indicator-badge" id="pageIndicator">
       UNIT 1 / 90
     </div>
+
     <button class="btn-nav-action" id="nextBtn" onclick="nextUnit()">
-      <span>次のUNIT</span>
+      <span class="nav-label-text">次のUNIT</span>
       <span>▶</span>
     </button>
   </footer>
@@ -1066,13 +1174,13 @@
         for (let c = 1; c <= 5; c++) {
           const key = `${u.unit}_${it.num}_${c}`;
           const checked = progress[key] ? 'checked' : '';
-          checksHtml += `<input type="checkbox" class="check-box-input" title="第${c}回チェック" ${checked} onchange="saveProgress(${u.unit}, ${it.num}, ${c}, this.checked)">`;
+          checksHtml += `<input type="checkbox" class="check-box-input" title="第${c}回チェック" ${checked} onclick="event.stopPropagation()" onchange="saveProgress(${u.unit}, ${it.num}, ${c}, this.checked)">`;
         }
 
         rowsHtml += `
           <!-- Left Item ${it.num} (col 1, row ${gridRow}) -->
           <div class="left-col-item" style="grid-row: ${gridRow};">
-            <div class="item-card left-card">
+            <div class="item-card left-card" onclick="revealCardFromLeft(this)">
               <div class="item-header-row">
                 <div class="item-num-badge">${it.num}</div>
                 <div class="item-text-area">
@@ -1190,6 +1298,20 @@
       }
     }
 
+    function revealCardFromLeft(leftCard) {
+      if (!isMasked || window.innerWidth > 860) return;
+      const leftCol = leftCard.closest('.left-col-item');
+      if (leftCol) {
+        const rightCol = leftCol.nextElementSibling;
+        if (rightCol) {
+          const rightCard = rightCol.querySelector('.right-card');
+          if (rightCard) {
+            rightCard.classList.toggle('revealed');
+          }
+        }
+      }
+    }
+
     function goToUnit(idx) {
       if (idx >= 0 && idx < unitsData.length) {
         renderUnit(idx);
@@ -1220,15 +1342,33 @@
 
     function toggleMaskMode() {
       isMasked = !isMasked;
-      const btn = document.getElementById('maskToggleBtn');
-      const btnText = document.getElementById('maskBtnText');
-      if (isMasked) {
-        btn.classList.add('active');
-        btnText.textContent = '暗記中 (クリック開示)';
-      } else {
-        btn.classList.remove('active');
-        btnText.textContent = '暗記テスト';
+
+      // Update Top Button
+      const topBtn = document.getElementById('maskToggleBtn');
+      const topBtnText = document.getElementById('maskBtnText');
+      if (topBtn && topBtnText) {
+        if (isMasked) {
+          topBtn.classList.add('active');
+          topBtnText.textContent = '暗記中 (タップ開示)';
+        } else {
+          topBtn.classList.remove('active');
+          topBtnText.textContent = '暗記テスト';
+        }
       }
+
+      // Update Bottom Button
+      const botBtn = document.getElementById('bottomMaskBtn');
+      const botBtnText = document.getElementById('bottomMaskText');
+      if (botBtn && botBtnText) {
+        if (isMasked) {
+          botBtn.classList.add('active');
+          botBtnText.textContent = '暗記中 (ON)';
+        } else {
+          botBtn.classList.remove('active');
+          botBtnText.textContent = '暗記テスト';
+        }
+      }
+
       renderUnit(currentUnitIndex);
     }
 
